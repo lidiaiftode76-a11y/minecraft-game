@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Майнкрафт</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Courier New', 'Minecraft', monospace;
+            overflow: hidden;
+            background: #0a0a2a;
+            touch-action: none;
+        }
+
+        /* ГЛАВНОЕ МЕНЮ */
+        .main-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a3a2a 0%, #0a1a0a 100%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+
+        .menu-title {
+            font-size: 64px;
+            font-weight: bold;
+            color: #ffdd55;
+            text-shadow: 6px 6px 0 #3a2a1a;
+            margin-bottom: 40px;
+            letter-spacing: 4px;
+            text-align: center;
+        }
+
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 260px;
+        }
+
+        .minecraft-btn {
+            background: #4a4a4a;
+            border: 4px solid #8a8a8a;
+            color: white;
+            font-size: 26px;
+            font-weight: bold;
+            padding: 12px 32px;
+            font-family: monospace;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.08s linear;
+            box-shadow: 0 6px 0 #2a2a2a;
+            text-shadow: 2px 2px 0 #2a2a2a;
+        }
+
+        .minecraft-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #2a2a2a;
+        }
+
+        .world-list {
+            background: #2a2a2ae6;
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 30px;
+            width: 400px;
+            max-width: 80vw;
+            border: 2px solid #aa8844;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .world-item {
+            background: #1e2a1a;
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border: 1px solid #8a6a3a;
+        }
+
+        .world-item:active { background: #3a5a2a; transform: scale(0.99); }
+        .world-name { font-size: 20px; font-weight: bold; color: #ffdd99; }
+        .create-panel {
+            background: #2a2a2ae6;
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 20px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .create-panel input {
+            background: #1a1a1a;
+            border: 2px solid #aa8844;
+            padding: 12px;
+            font-size: 18px;
+            color: white;
+            font-family: monospace;
+            border-radius: 12px;
+        }
+        .small-btn { font-size: 18px; padding: 8px 20px; }
+
+        /* ИГРОВОЙ ИНТЕРФЕЙС */
+        .game-ui {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 200;
+        }
+        .hotbar {
+            background: #2a2a2acc;
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            padding: 8px 16px;
+            display: flex;
+            gap: 8px;
+            border: 2px solid #aa8844;
+            pointer-events: auto;
+        }
+        .hotbar-slot {
+            width: 56px;
+            height: 56px;
+            background: #1e1e1ecc;
+            border: 2px solid #6a6a6a;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+        }
+        .hotbar-slot.selected { border: 4px solid #ffcc44; background: #3a4a2a; box-shadow: 0 0 10px gold; }
+        .slot-icon { font-size: 28px; }
+        .slot-count { font-size: 11px; background: black; padding: 2px 5px; border-radius: 10px; position: absolute; bottom: 2px; right: 4px; color: white; }
+        
+        .stats {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #1a1a1acc;
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: #ffdd99;
+            font-weight: bold;
+            pointer-events: none;
+            backdrop-filter: blur(4px);
+            font-size: 14px;
+            z-index: 200;
+        }
+        .online-status {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #1a1a1acc;
+            padding: 6px 12px;
+            border-radius: 20px;
+            color: #aaffaa;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 200;
+        }
+        .controls-hint {
+            position: absolute;
+            bottom: 100px;
+            left: 20px;
+            background: #00000099;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            color: #ccc;
+            pointer-events: none;
+        }
+        .touch-joystick {
+            position: absolute;
+            bottom: 100px;
+            left: 20px;
+            width: 120px;
+            height: 120px;
+            border-radius: 60px;
+            background: rgba(30,30,40,0.6);
+            backdrop-filter: blur(8px);
+            border: 2px solid #ffcc88;
+            z-index: 300;
+            display: none;
+            touch-action: none;
+        }
+        .touch-joystick .stick {
+            width: 50px;
+            height: 50px;
+            border-radius: 25px;
+            background: rgba(255,220,100,0.8);
+            position: absolute;
+            top: 35px;
+            left: 35px;
+            transition: 0.02s;
+        }
+        .inventory-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #2a2a2ae6;
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 20px;
+            border: 4px solid #aa8844;
+            z-index: 400;
+            display: none;
+            grid-template-columns: repeat(9, 64px);
+            gap: 8px;
+            max-width: 90vw;
+            overflow-x: auto;
+            pointer-events: auto;
+        }
+        .inventory-slot {
+            width: 64px;
+            height: 64px;
+            background: #1e2a1a;
+            border: 2px solid #8a6a3a;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .close-inv {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            background: #aa4444;
+            padding: 5px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        @media (max-width: 700px) {
+            .hotbar-slot { width: 48px; height: 48px; }
+            .slot-icon { font-size: 24px; }
+            .inventory-panel { grid-template-columns: repeat(9, 55px); gap: 5px; }
+            .inventory-slot { width: 55px; height: 55px; }
+            .touch-joystick { display: block; }
+            .controls-hint { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div id="mainMenu" class="main-menu">
+        <div class="menu-title">МАЙНКРАФТ</div>
+        <div class="menu-buttons">
+            <div class="minecraft-btn" id="playBtn">▶ ИГРАТЬ</div>
+            <div class="minecraft-btn" id="newWorldBtn">🌍 НОВЫЙ МИР</div>
+        </div>
+        <div id="worldListContainer" class="world-list">
+            <div style="text-align:center; color:#ffcc88;">МИРЫ:</div>
+            <div id="worldsList"></div>
+        </div>
+        <div class="create-panel" id="createPanel" style="display:none;">
+            <input type="text" id="worldNameInput" placeholder="Название мира" maxlength="20">
+            <div class="minecraft-btn small-btn" id="confirmCreate">✅ СОЗДАТЬ</div>
+            <div class="minecraft-btn small-btn" id="cancelCreate">❌ ОТМЕНА</div>
+        </div>
+    </div>
+
+    <div id="gameUI" style="display:none;">
+        <div class="stats">🧱 <span id="blockCount">0</span> &nbsp;| 💎 <span id="diamondCount">0</span></div>
+        <div class="online-status" id="onlineStatus">🌐 Офлайн</div>
+        <div class="game-ui"><div class="hotbar" id="hotbar"></div></div>
+        <div class="inventory-panel" id="inventoryPanel">
+            <div class="close-inv" id="closeInvBtn">✖ ЗАКРЫТЬ</div>
+            <div id="inventoryGrid" style="display:grid; grid-template-columns:repeat(9, 64px); gap:8px;"></div>
+        </div>
+        <div class="controls-hint">WASD - движение | 🖱️ мышь | E - инвентарь | 1-9 - выбор</div>
+        <div id="touchJoystick" class="touch-joystick"><div class="stick" id="joystickStick"></div></div>
+    </div>
+
+    <script type="importmap">
+        { "imports": { "three": "https://unpkg.com/three@0.128.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/" } }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+        // ---------- МЕНЕДЖЕР МИРОВ ----------
+        let worlds = JSON.parse(localStorage.getItem('minecraft_worlds3') || '[]');
+        let currentWorldName = "";
+        let scene, camera, renderer, labelRenderer, worldGroup;
+        let blocksMap = new Map();
+        let moveState = { forward: false, backward: false, left: false, right: false, jump: false };
+        let pitch = 0, yaw = -Math.PI / 4;
+        let velocity = new THREE.Vector3(0,0,0);
+        let onGround = true;
+        let isPointerLock = false;
+        let currentBlockType = 0;
+        let inventory = {};
+        let hotbar = [0,1,2,3,4,5,6,7,8];
+        let selectedHotbarSlot = 0;
+        let isInventoryOpen = false;
+        let totalBlocksPlaced = 0;
+        let diamondsFound = 0;
+        
+        // WebSocket онлайн
+        let socket = null;
+        let isOnline = false;
+        const WS_URL = "wss://demo.piesocket.com/v3/channel_minecraft?api_key=VCXoXhzeS6k6C7tV&notify_self";
+        
+        // Мир увеличенный
+        const WORLD_SIZE_X = 50;
+        const WORLD_SIZE_Z = 50;
+        
+        const BLOCKS = [
+            { id:0, name:"Трава", color:"#5e9c4e", icon:"🌿", solid:true },
+            { id:1, name:"Земля", color:"#8b5a2b", icon:"🟫", solid:true },
+            { id:2, name:"Камень", color:"#7e8c8d", icon:"🪨", solid:true },
+            { id:3, name:"Древесина", color:"#b87c4f", icon:"🪵", solid:true },
+            { id:4, name:"Доски", color:"#c99e6f", icon:"🪚", solid:true },
+            { id:5, name:"Кирпич", color:"#b55b3c", icon:"🧱", solid:true },
+            { id:6, name:"Золото", color:"#f3c26b", icon:"🌟", solid:true },
+            { id:7, name:"Алмаз", color:"#5ad4e6", icon:"💎", solid:true },
+            { id:8, name:"Стекло", color:"#b3e4f5", icon:"🔷", solid:false, transparent:true }
+        ];
+        
+        function addBlock(x,y,z,typeId) {
+            const key = `${x},${y},${z}`;
+            if(blocksMap.has(key)) return null;
+            const geometry = new THREE.BoxGeometry(0.96,0.96,0.96);
+            const col = parseInt(BLOCKS[typeId].color.slice(1),16);
+            const material = new THREE.MeshStandardMaterial({ color: col, roughness: 0.6 });
+            if(BLOCKS[typeId].transparent) material.transparent = true;
+            const cube = new THREE.Mesh(geometry, material);
+            cube.position.set(x,y,z);
+            cube.castShadow = true;
+            cube.receiveShadow = true;
+            cube.userData = { typeId, x, y, z };
+            worldGroup.add(cube);
+            blocksMap.set(key, cube);
+            return cube;
+        }
+        function removeBlock(x,y,z) {
+            const key = `${x},${y},${z}`;
+            const cube = blocksMap.get(key);
+            if(cube) { worldGroup.remove(cube); cube.geometry.dispose(); cube.material.dispose(); blocksMap.delete(key); }
+        }
+        function getBlock(x,y,z) { return blocksMap.get(`${x},${y},${z}`); }
+        
+        function generateLargeWorld() {
+            for(let x = -WORLD_SIZE_X/2; x < WORLD_SIZE_X/2; x++) {
+                for(let z = -WORLD_SIZE_Z/2; z < WORLD_SIZE_Z/2; z++) {
+                    addBlock(x, 2, z, 0);
+                    addBlock(x, 1, z, 1);
+                    for(let y = 0; y >= -3; y--) addBlock(x, y, z, 2);
+                }
+            }
+            for(let i=0;i<140;i++) {
+                let tx = Math.floor(Math.random()*(WORLD_SIZE_X-8)) - WORLD_SIZE_X/2 + 4;
+                let tz = Math.floor(Math.random()*(WORLD_SIZE_Z-8)) - WORLD_SIZE_Z/2 + 4;
+                if(!getBlock(tx,3,tz)) {
+                    for(let h=1;h<=3;h++) addBlock(tx,2+h,tz,3);
+                    for(let lx=-1;lx<=1;lx++) for(let lz=-1;lz<=1;lz++) if(lx||lz) addBlock(tx+lx,5,tz+lz,4);
+                    addBlock(tx,6,tz,4);
+                }
+            }
+            for(let i=0;i<200;i++) {
+                let x = Math.floor(Math.random()*(WORLD_SIZE_X-10)) - WORLD_SIZE_X/2 +5;
+                let z = Math.floor(Math.random()*(WORLD_SIZE_Z-10)) - WORLD_SIZE_Z/2 +5;
+                let y = Math.floor(Math.random()*5)-2;
+                if(getBlock(x,y,z) && getBlock(x,y,z).userData.typeId===2) {
+                    removeBlock(x,y,z);
+                    addBlock(x,y,z,7);
+                }
+            }
+        }
+        
+        function saveWorld() {
+            if(!currentWorldName) return;
+            const worldData = {
+                name: currentWorldName,
+                blocks: Array.from(blocksMap.entries()).map(([key,mesh]) => {
+                    const [x,y,z]=key.split(',').map(Number);
+                    return {x,y,z, typeId:mesh.userData.typeId};
+                }),
+                inventory, hotbar, totalBlocksPlaced, diamondsFound,
+                pos: { x:camera.position.x, y:camera.position.y, z:camera.position.z, yaw, pitch }
+            };
+            const idx = worlds.findIndex(w=>w.name===currentWorldName);
+            if(idx!==-1) worlds[idx]=worldData;
+            else worlds.push(worldData);
+            localStorage.setItem('minecraft_worlds3', JSON.stringify(worlds));
+        }
+        
+        function loadWorld(name) {
+            const data = worlds.find(w=>w.name===name);
+            if(!data) return false;
+            currentWorldName = name;
+            worldGroup.children.forEach(c=>worldGroup.remove(c));
+            blocksMap.clear();
+            for(let b of data.blocks) addBlock(b.x,b.y,b.z,b.typeId);
+            inventory = data.inventory || {};
+            hotbar = data.hotbar || [0,1,2,3,4,5,6,7,8];
+            totalBlocksPlaced = data.totalBlocksPlaced || 0;
+            diamondsFound = data.diamondsFound || 0;
+            if(data.pos) {
+                camera.position.set(data.pos.x,data.pos.y,data.pos.z);
+                yaw=data.pos.yaw; pitch=data.pos.pitch;
+            } else camera.position.set(0,8,15);
+            updateUI();
+            return true;
+        }
+        
+        function createNewWorld(name) {
+            if(worlds.find(w=>w.name===name)) return false;
+            currentWorldName = name;
+            worldGroup.children.forEach(c=>worldGroup.remove(c));
+            blocksMap.clear();
+            generateLargeWorld();
+            inventory = {};
+            for(let i=0;i<BLOCKS.length;i++) inventory[i] = (i===0||i===1||i===2)?128:20;
+            hotbar = [0,1,2,3,4,5,6,7,8];
+            totalBlocksPlaced = 0; diamondsFound=0;
+            camera.position.set(0,8,15);
+            yaw=-Math.PI/3; pitch=-0.2;
+            updateUI();
+            saveWorld();
+            return true;
+        }
+        
+        function addToInventory(id,amt=1) { if(!inventory[id]) inventory[id]=0; inventory[id]+=amt; updateUI(); }
+        function removeFromInventory(id,amt=1) { if(inventory[id]>=amt) { inventory[id]-=amt; updateUI(); return true; } return false; }
+        
+        function updateUI() {
+            document.getElementById('blockCount').innerText = totalBlocksPlaced;
+            document.getElementById('diamondCount').innerText = diamondsFound;
+            renderHotbar();
+            if(isInventoryOpen) renderInventory();
+        }
+        function renderHotbar() {
+            const cont = document.getElementById('hotbar');
+            cont.innerHTML = '';
+            for(let i=0;i<9;i++) {
+                const bid = hotbar[i];
+                const b = BLOCKS[bid];
+                const s = document.createElement('div');
+                s.className = `hotbar-slot ${selectedHotbarSlot===i?'selected':''}`;
+                s.innerHTML = `<div class="slot-icon">${b.icon}</div><div class="slot-count">${inventory[bid]||0}</div>`;
+                s.onclick = () => { selectedHotbarSlot=i; currentBlockType=hotbar[i]; renderHotbar(); };
+                cont.appendChild(s);
+            }
+        }
+        function renderInventory() {
+            const grid = document.getElementById('inventoryGrid');
+            grid.innerHTML = '';
+            for(let i=0;i<BLOCKS.length;i++) {
+                const b=BLOCKS[i];
+                const div=document.createElement('div');
+                div.className='inventory-slot';
+                div.innerHTML=`<div style="font-size:32px;">${b.icon}</div><div style="position:absolute; bottom:2px; right:6px;">${inventory[i]||0}</div>`;
+                grid.appendChild(div);
+            }
+        }
+        
+        // Геймплей
+        const raycaster = new THREE.Raycaster();
+        function getTargetBlock(dist=5.5) {
+            const dir = new THREE.Vector3(0,0,-1);
+            const quat = new THREE.Quaternion().setFromEuler(new THREE.Euler(pitch,yaw,0,'YXZ'));
+            dir.applyQuaternion(quat);
+            raycaster.set(camera.position, dir);
+            const hits = raycaster.intersectObjects(Array.from(blocksMap.values()));
+            if(hits.length && hits[0].distance<dist) return hits[0];
+            return null;
+        }
+        function destroyBlock() {
+            const hit = getTargetBlock();
+            if(!hit) return;
+            const {x,y,z,typeId} = hit.object.userData;
+            if(typeId===7) { diamondsFound++; addToInventory(7,1); }
+            else addToInventory(typeId,1);
+            removeBlock(x,y,z);
+            totalBlocksPlaced--;
+            updateUI();
+            sendBlockUpdate(x,y,z,0);
+        }
+        function buildBlock() {
+            const hit = getTargetBlock();
+            if(!hit) return;
+            const n = hit.face.normal;
+            const b = hit.object;
+            const nx = b.position.x + (n.x>0.5?1: n.x<-0.5?-1:0);
+            const ny = b.position.y + (n.y>0.5?1: n.y<-0.5?-1:0);
+            const nz = b.position.z + (n.z>0.5?1: n.z<-0.5?-1:0);
+            if(!getBlock(nx,ny,nz)) {
+                if(inventory[currentBlockType] && inventory[currentBlockType]>0) {
+                    addBlock(nx,ny,nz, currentBlockType);
+                    removeFromInventory(currentBlockType,1);
+                    totalBlocksPlaced++;
+                    updateUI();
+                    sendBlockUpdate(nx,ny,nz, currentBlockType);
+                } else if(currentBlockType===0) { addBlock(nx,ny,nz,0); totalBlocksPlaced++; updateUI(); sendBlockUpdate(nx,ny,nz,0); }
+            }
+        }
+        
+        // WebSocket онлайн синхронизация
+        function connectWebSocket() {
+            if(socket && socket.readyState===WebSocket.OPEN) return;
+            socket = new WebSocket(WS_URL);
+            socket.onopen = () => { isOnline=true; document.getElementById('onlineStatus').innerHTML='🌐 Онлайн'; };
+            socket.onmessage = (e) => {
+                try{
+                    const data = JSON.parse(e.data);
+                    if(data.type==='block_update') {
+                        const {x,y,z,blockId} = data;
+                        if(getBlock(x,y,z) && blockId===0) removeBlock(x,y,z);
+                        else if(blockId!==0 && !getBlock(x,y,z)) addBlock(x,y,z,blockId);
+                    } else if(data.type==='world_sync' && data.worldData) {
+                        // синхронизация мира от другого игрока
+                    }
+                }catch(e){}
+            };
+            socket.onclose = () => { isOnline=false; document.getElementById('onlineStatus').innerHTML='🌐 Офлайн'; setTimeout(connectWebSocket,5000); };
+        }
+        function sendBlockUpdate(x,y,z,blockId) {
+            if(isOnline && socket && socket.readyState===WebSocket.OPEN) socket.send(JSON.stringify({type:'block_update',x,y,z,blockId}));
+        }
+        
+        // ---------- УПРАВЛЕНИЕ ----------
+        function initControls() {
+            const canvas = renderer.domElement;
+            canvas.addEventListener('click', () => canvas.requestPointerLock());
+            document.addEventListener('pointerlockchange', () => {
+                isPointerLock = document.pointerLockElement === canvas;
+                if(isPointerLock) document.addEventListener('mousemove', onMouseMove);
+                else document.removeEventListener('mousemove', onMouseMove);
+            });
+            function onMouseMove(e) { if(!isPointerLock) return; yaw -= e.movementX*0.002; pitch -= e.movementY*0.002; if(pitch>1.4) pitch=1.4; if(pitch<-1.4) pitch=-1.4; }
+            window.addEventListener('keydown', (e) => {
+                if(!isPointerLock && document.getElementById('gameUI').style.display!=='none') return;
+                switch(e.code){
+                    case 'KeyW': moveState.forward=true; break;
+                    case 'KeyS': moveState.backward=true; break;
+                    case 'KeyA': moveState.left=true; break;
+                    case 'KeyD': moveState.right=true; break;
+                    case 'Space': if(onGround){ velocity.y=6.5; onGround=false; } break;
+                    case 'KeyE': toggleInventory(); break;
+                }
+                let n = parseInt(e.key);
+                if(n>=1 && n<=9) { selectedHotbarSlot=n-1; currentBlockType=hotbar[selectedHotbarSlot]; renderHotbar(); }
+            });
+            window.addEventListener('keyup', (e) => {
+                switch(e.code){
+                    case 'KeyW': moveState.forward=false; break;
+                    case 'KeyS': moveState.backward=false; break;
+                    case 'KeyA': moveState.left=false; break;
+                    case 'KeyD': moveState.right=false; break;
+                }
+            });
+            window.addEventListener('mousedown', (e) => {
+                if(!isPointerLock) return;
+                if(e.button===0) destroyBlock();
+                else if(e.button===2) buildBlock();
+                e.preventDefault();
+            });
+            window.addEventListener('contextmenu', e=>e.preventDefault());
+            
+            // Touch джойстик для телефона
+            const joystick = document.getElementById('touchJoystick');
+            const stick = document.getElementById('joystickStick');
+            let activeTouch = false;
+            let joyCenter = { x:0, y:0 };
+            const updateJoy = (clientX, clientY) => {
+                const rect = joystick.getBoundingClientRect();
+                const centerX = rect.left + rect.width/2;
+                const centerY = rect.top + rect.height/2;
+                let dx = clientX - centerX;
+                let dy = clientY - centerY;
+                let dist = Math.hypot(dx,dy);
+                let maxR = rect.width/2 - 25;
+                if(dist>maxR) { dx = dx*maxR/dist; dy = dy*maxR/dist; }
+                stick.style.transform = `translate(${dx}px, ${dy}px)`;
+                let normX = dx/maxR, normY = dy/maxR;
+                moveState.forward = normY < -0.2;
+                moveState.backward = normY > 0.2;
+                moveState.left = normX < -0.2;
+                moveState.right = normX > 0.2;
+            };
+            joystick.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                activeTouch = true;
+                const touch = e.touches[0];
+                updateJoy(touch.clientX, touch.clientY);
+            });
+            joystick.addEventListener('touchmove', (e) => {
+                if(!activeTouch) return;
+                e.preventDefault();
+                const touch = e.touches[0];
+                updateJoy(touch.clientX, touch.clientY);
+            });
+            joystick.addEventListener('touchend', () => {
+                activeTouch = false;
+                stick.style.transform = 'translate(0px, 0px)';
+                moveState.forward=false; moveState.backward=false; moveState.left=false; moveState.right=false;
+            });
+        }
+        
+        function updateMovement(delta) {
+            if(!isPointerLock && !activeTouch) return;
+            const speed = 6.0 * delta;
+            const forward = new THREE.Vector3(0,0,-1);
+            const right = new THREE.Vector3(1,0,0);
+            const quat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0,yaw,0,'YXZ'));
+            forward.applyQuaternion(quat);
+            right.applyQuaternion(quat);
+            let move = new THREE.Vector3(0,0,0);
+            if(moveState.forward) move.z -=1;
+            if(moveState.backward) move.z +=1;
+            if(moveState.left) move.x -=1;
+            if(moveState.right) move.x +=1;
+            move.normalize();
+            let dx = (move.x*forward.x + move.z*right.x)*speed;
+            let dz = (move.x*forward.z + move.z*right.z)*speed;
+            let newX = camera.position.x+dx, newZ = camera.position.z+dz;
+            const canMove = (x,z) => {
+                const fy = camera.position.y;
+                for(let ix=-1;ix<=1;ix++) for(let iz=-1;iz<=1;iz++) {
+                    const b = getBlock(Math.floor(x+ix*0.4), Math.floor(fy), Math.floor(z+iz*0.4));
+                    if(b && BLOCKS[b.userData.typeId].solid) return false;
+                } return true;
+            };
+            if(canMove(newX, camera.position.z)) camera.position.x=newX;
+            if(canMove(camera.position.x, newZ)) camera.position.z=newZ;
+            velocity.y -= 25*delta;
+            camera.position.y += velocity.y*delta;
+            onGround = false;
+            const feet = Math.floor(camera.position.y-0.2);
+            const under = getBlock(Math.floor(camera.position.x), feet, Math.floor(camera.position.z));
+            if(under && BLOCKS[under.userData.typeId].solid && velocity.y<=0) {
+                camera.position.y = feet+1;
+                velocity.y=0; onGround=true;
+            }
+            if(camera.position.y<1.5) { camera.position.y=1.6; velocity.y=0; onGround=true; }
+        }
+        
+        function toggleInventory() { isInventoryOpen=!isInventoryOpen; document.getElementById('inventoryPanel').style.display=isInventoryOpen?'grid':'none'; if(isInventoryOpen) renderInventory(); }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            updateMovement(1/60);
+            const euler = new THREE.Euler(pitch,yaw,0,'YXZ');
+            camera.quaternion.setFromEuler(euler);
+            renderer.render(scene,camera);
+            labelRenderer.render(scene,camera);
+        }
+        
+        function init3D() {
+            scene = new THREE.Scene(); scene.background=new THREE.Color(0x87CEEB); scene.fog=new THREE.Fog(0x87CEEB,120,220);
+            camera = new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,500);
+            renderer = new THREE.WebGLRenderer({antialias:true}); renderer.setSize(window.innerWidth,window.innerHeight); renderer.shadowMap.enabled=true;
+            document.body.appendChild(renderer.domElement);
+            labelRenderer = new CSS2DRenderer(); labelRenderer.setSize(window.innerWidth,window.innerHeight); labelRenderer.domElement.style.position='absolute'; labelRenderer.domElement.style.top='0px'; labelRenderer.domElement.style.left='0px'; labelRenderer.domElement.style.pointerEvents='none';
+            document.body.appendChild(labelRenderer.domElement);
+            worldGroup = new THREE.Group(); scene.add(worldGroup);
+            const sun = new THREE.DirectionalLight(0xfff5d1,1.2); sun.position.set(40,50,20); sun.castShadow=true; scene.add(sun);
+            scene.add(new THREE.AmbientLight(0x404060,0.65));
+            initControls();
+            animate();
+        }
+        
+        function startGame(worldName) { loadWorld(worldName); document.getElementById('mainMenu').style.display='none'; document.getElementById('gameUI').style.display='block'; isInventoryOpen=false; document.getElementById('inventoryPanel').style.display='none'; renderer.domElement.requestPointerLock(); connectWebSocket(); }
+        function showMenu() { saveWorld(); document.getElementById('mainMenu').style.display='flex'; document.getElementById('gameUI').style.display='none'; isPointerLock=false; document.exitPointerLock(); renderWorldsList(); }
+        
+        function renderWorldsList() {
+            const cont = document.getElementById('worldsList'); cont.innerHTML='';
+            worlds.forEach(w=>{
+                const div=document.createElement('div'); div.className='world-item';
+                div.innerHTML=`<div><div class="world-name">${w.name}</div></div><div>▶</div>`;
+                div.onclick=()=>startGame(w.name);
+                cont.appendChild(div);
+            });
+        }
+        
+        document.getElementById('playBtn').onclick=()=>{ if(worlds.length) startGame(worlds[0].name); else alert('Создайте мир'); };
+        document.getElementById('newWorldBtn').onclick=()=>document.getElementById('createPanel').style.display='flex';
+        document.getElementById('confirmCreate').onclick=()=>{ let name=document.getElementById('worldNameInput').value.trim(); if(name && createNewWorld(name)){ document.getElementById('createPanel').style.display='none'; renderWorldsList(); startGame(name); } else alert('Ошибка'); };
+        document.getElementById('cancelCreate').onclick=()=>document.getElementById('createPanel').style.display='none';
+        document.getElementById('closeInvBtn').onclick=toggleInventory;
+        
+        init3D();
+        if(worlds.length===0) createNewWorld("Мир выживания");
+        renderWorldsList();
+    </script>
+</body>
+</html>
